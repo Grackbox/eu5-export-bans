@@ -1,0 +1,25 @@
+[h1]Export Bans[/h1]
+Ban the export or the import of single goods, right from the Tariffs tab.
+
+[h2]How it works[/h2]
+[list]
+[*]Research [b]Export Bans[/b] or [b]Import Bans[/b], two new Age of Reformation advances after Global Trade (they need the Global Trade institution). Each also gives +1% import or export efficiency.
+[*]Open Economy → Tariffs. Every good gets a ban button next to its export or import tariff. Click to ban, click again to lift the ban.
+[*]A banned good can't leave your markets for foreign ones (export ban) or come into them from foreign ones (import ban). It still moves freely between your own markets, as the game allows for domestic transfers.
+[*]The bans are the game's own ban modifiers, the same ones religions and laws use, so trade tooltips show them as the reason.
+[/list]
+
+[h2]Mercantilism[/h2]
+Historically mercantilist bans pull your society towards Mercantilism, as much per ban as a merchant in a foreign market pulls it towards Free Trade:
+[list]
+[*]Export bans on bullion, raw materials for your own workshops, metals and naval stores (gold, silver, wool, cotton, silk, dyes, iron, lumber, naval supplies, horses and more).
+[*]Import bans on finished goods and luxuries (cloth, glass, paper, tools, weapons, wine, spices, tobacco, tea, sugar and more).
+[/list]
+Food bans and other bans don't move the slider.
+
+[h2]Good to know[/h2]
+[list]
+[*]Works for 74 goods (the game has no ban for camels).
+[*]Overrides trade_policies_lateralview.gui (the Tariffs tab), so mods that change the same file may conflict.
+[*]In a game started before the mod, the two advances are added to the Age of Reformation tree when you load the save.
+[/list]
