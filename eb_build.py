@@ -110,7 +110,7 @@ def pull_loc(lang):
         for g in goods:
             lines[f"EB_{k.upper()}_NAME_{g}"] = f"[ShowGoodsName('{g}')]"
             lines[f"EB_{k.upper()}_ITEM_{g}"] = f"\\n• [ShowGoodsName('{g}')]"
-        lines[f"game_concept_eb_{k}_goods"] = "товары" if ru else "goods"
+        lines[f"game_concept_eb_{k}_goods"] = "Товары" if ru else "Goods"   # the tooltip title; the link in the line has its own text
         lines[f"game_concept_eb_{k}_goods_desc"] = (
             (("Под запретом экспорта" if k == "export" else "Под запретом импорта") if ru else
              ("Export banned" if k == "export" else "Import banned"))
