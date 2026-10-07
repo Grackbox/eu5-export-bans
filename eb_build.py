@@ -59,7 +59,8 @@ def modifiers():
 def effects():
     """eb_recount_bans: counts the mercantilist bans of each kind, gives the matching pull modifier, and keeps the
     variables the pull modifier's name and the goods list read (eb_<kind>_on_<good>, and _p1_/_p2_ for the first two)."""
-    out = "# Scope: country. Run after a ban changes, and monthly (saves from before the pull was one modifier).\neb_recount_bans = {\n"
+    out = ("# Scope: country. Run after a ban changes, and once per save from the monthly pulse (bans from before the pull was\n"
+           "# one modifier).\neb_recount_bans = {\n")
     for k in KINDS:
         goods = merc(k)
         out += "".join(f"\tif = {{\n\t\tlimit = {{ has_country_modifier = eb_{k}_pull_{n} }}\n\t\tremove_country_modifier = eb_{k}_pull_{n}\n\t}}\n"
@@ -75,7 +76,7 @@ def effects():
                     f"\t\tif = {{\n\t\t\tlimit = {{ local_var:eb_n = 2 }}\n\t\t\tset_variable = {{ name = eb_{k}_p2_{g} value = yes }}\n\t\t}}\n\t}}\n")
         out += "".join(f"\tif = {{\n\t\tlimit = {{ local_var:eb_n = {n} }}\n\t\tadd_country_modifier = {{ modifier = eb_{k}_pull_{n} years = -1 }}\n\t}}\n"
                        for n in range(1, len(goods) + 1))
-    return out + "}\n"
+    return out + "\tset_variable = { name = eb_recounted value = yes }\n}\n"
 
 
 ON_ACTIONS = """monthly_country_pulse = {
@@ -84,10 +85,11 @@ ON_ACTIONS = """monthly_country_pulse = {
 	}
 }
 
-# Scope: country. Only players ban goods.
+# Scope: country. Once per save, for bans set before the pull was one modifier: from then on the ban buttons recount.
 eb_monthly_recount = {
 	trigger = {
 		is_ai = no
+		NOT = { has_variable = eb_recounted }
 	}
 	effect = {
 		eb_recount_bans = yes
