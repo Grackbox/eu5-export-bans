@@ -213,7 +213,7 @@ def main():
             lines[f"MODIFIER_TYPE_NAME_eb_unlocks_{k}_bans"] = u_name
             lines[f"MODIFIER_TYPE_DESC_eb_unlocks_{k}_bans"] = u_desc
         write(f"main_menu/localization/{lang}/eb_l_{lang}.yml", f"l_{lang}:\n" + "".join(f' {key}: "{v}"\n' for key, v in lines.items()))
-    meta = {"name": "Export Bans", "id": "grackbox.export_bans", "version": "1.0.0", "game_id": "eu5", "supported_game_version": "1.4.*",
+    meta = {"name": "Export Bans [LOCAL]", "id": "grackbox.export_bans", "version": "1.0.0", "game_id": "eu5", "supported_game_version": "1.4.*",
             "short_description": "Ban the export or import of single goods from the Tariffs tab.", "tags": ["Economy", "1.4"],
             "relationships": [], "game_custom_data": {}}
     write(".metadata/metadata.json", json.dumps(meta, indent=4) + "\n")
