@@ -35,13 +35,106 @@ MERCANTILIST = {
 }
 
 
+TINY_MOVE = 0.025   # the game's societal_value_tiny_monthly_move (script_values/default_values.txt)
+
+
+def merc(k):
+    """The mercantilist goods of a kind, in the order of goods.json."""
+    return [g for g in GOODS if g in MERCANTILIST[k]]
+
+
 def modifiers():
+    # the bans themselves carry no pull: each would be a line of its own in the society value's breakdown. The pull of
+    # all the mercantilist bans of a kind is one modifier, eb_<kind>_pull_<n> for n banned goods (see effects()).
     out = ""
     for k in KINDS:
         for g in GOODS:
-            pull = "\tmonthly_towards_mercantilism = societal_value_tiny_monthly_move\n" if g in MERCANTILIST[k] else ""
-            out += f"eb_{k}_ban_{g} = {{\n\tgame_data = {{\n\t\tcategory = country\n\t}}\n\tban_{k}s_of_{g} = yes\n{pull}}}\n\n"
+            out += f"eb_{k}_ban_{g} = {{\n\tgame_data = {{\n\t\tcategory = country\n\t}}\n\tban_{k}s_of_{g} = yes\n}}\n\n"
+        for n in range(1, len(merc(k)) + 1):
+            out += (f"eb_{k}_pull_{n} = {{\n\tgame_data = {{\n\t\tcategory = country\n\t}}\n"
+                    f"\tmonthly_towards_mercantilism = {round(TINY_MOVE * n, 3)}\n}}\n\n")
     return out
+
+
+def effects():
+    """eb_recount_bans: counts the mercantilist bans of each kind, gives the matching pull modifier, and keeps the
+    variables the pull modifier's name and the goods list read (eb_<kind>_on_<good>, and _p1_/_p2_ for the first two)."""
+    out = "# Scope: country. Run after a ban changes, and monthly (saves from before the pull was one modifier).\neb_recount_bans = {\n"
+    for k in KINDS:
+        goods = merc(k)
+        out += "".join(f"\tif = {{\n\t\tlimit = {{ has_country_modifier = eb_{k}_pull_{n} }}\n\t\tremove_country_modifier = eb_{k}_pull_{n}\n\t}}\n"
+                       for n in range(1, len(goods) + 1))
+        out += "".join(f"\tif = {{\n\t\tlimit = {{ has_variable = eb_{k}_{p}_{g} }}\n\t\tremove_variable = eb_{k}_{p}_{g}\n\t}}\n"
+                       for g in goods for p in ("on", "p1", "p2"))
+        out += "\tset_local_variable = { name = eb_n value = 0 }\n"
+        for g in goods:
+            out += (f"\tif = {{\n\t\tlimit = {{ has_country_modifier = eb_{k}_ban_{g} }}\n"
+                    f"\t\tchange_local_variable = {{ name = eb_n add = 1 }}\n"
+                    f"\t\tset_variable = {{ name = eb_{k}_on_{g} value = yes }}\n"
+                    f"\t\tif = {{\n\t\t\tlimit = {{ local_var:eb_n = 1 }}\n\t\t\tset_variable = {{ name = eb_{k}_p1_{g} value = yes }}\n\t\t}}\n"
+                    f"\t\tif = {{\n\t\t\tlimit = {{ local_var:eb_n = 2 }}\n\t\t\tset_variable = {{ name = eb_{k}_p2_{g} value = yes }}\n\t\t}}\n\t}}\n")
+        out += "".join(f"\tif = {{\n\t\tlimit = {{ local_var:eb_n = {n} }}\n\t\tadd_country_modifier = {{ modifier = eb_{k}_pull_{n} years = -1 }}\n\t}}\n"
+                       for n in range(1, len(goods) + 1))
+    return out + "}\n"
+
+
+ON_ACTIONS = """monthly_country_pulse = {
+	on_actions = {
+		eb_monthly_recount
+	}
+}
+
+# Scope: country. Only players ban goods.
+eb_monthly_recount = {
+	trigger = {
+		is_ai = no
+	}
+	effect = {
+		eb_recount_bans = yes
+	}
+}
+"""
+
+
+def concepts():
+    # the goods word of a pull line with three or more goods: its tooltip lists them
+    return "".join(f"eb_{k}_goods = {{\n\ttexture = \"modifiers/_default\"\n\tshown_in_encyclopedia = no\n}}\n" for k in KINDS)
+
+
+def ru_goods(n):
+    return "товар" if n % 10 == 1 and n % 100 != 11 else "товара" if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14) else "товаров"
+
+
+def pull_loc(lang):
+    """Names of the pull modifiers and the goods list. The breakdown shows "Label: rest" with the label on the left and
+    the rest, with the value, on the right."""
+    ru = lang == "russian"
+    lines = {}
+    for k in KINDS:
+        goods = merc(k)
+        def pick(p):
+            return "".join(f"[AddLocalizationIf(GetPlayer.MakeScope.GetVariable('eb_{k}_{p}_{g}').IsSet, 'EB_{k.upper()}_NAME_{g}')]"
+                           for g in goods)
+        label = ("Запреты экспорта" if k == "export" else "Запреты импорта") if ru else ("Export bans" if k == "export" else "Import bans")
+        one = ("Запрет экспорта" if k == "export" else "Запрет импорта") if ru else ("Export ban" if k == "export" else "Import ban")
+        for n in range(1, len(goods) + 1):
+            if n == 1:
+                text = f"{one}: {pick('p1')}"
+            elif n == 2:
+                text = f"{label}: {pick('p1')}, {pick('p2')}"
+            else:
+                text = f"{label}: {n} [Concept('eb_{k}_goods', '{ru_goods(n) if ru else 'goods'}')|e]"
+            lines[f"STATIC_MODIFIER_NAME_eb_{k}_pull_{n}"] = text
+        for g in goods:
+            lines[f"EB_{k.upper()}_NAME_{g}"] = f"[ShowGoodsName('{g}')]"
+            lines[f"EB_{k.upper()}_ITEM_{g}"] = f"\\n• [ShowGoodsName('{g}')]"
+        lines[f"game_concept_eb_{k}_goods"] = "товары" if ru else "goods"
+        lines[f"game_concept_eb_{k}_goods_desc"] = (
+            (("Под запретом экспорта" if k == "export" else "Под запретом импорта") if ru else
+             ("Export banned" if k == "export" else "Import banned"))
+            + "".join(f"[AddLocalizationIf(GetPlayer.MakeScope.GetVariable('eb_{k}_on_{g}').IsSet, 'EB_{k.upper()}_ITEM_{g}')]"
+                      for g in goods))
+    return lines
 
 
 def scripted_guis():
@@ -60,7 +153,7 @@ def scripted_guis():
                 f"\tis_shown = {{\n\t\tOR = {{\n{banned}\t\t}}\n\t}}\n}}\n\n"
                 f"# Scope: country. Bans this good's {k}, or lifts the ban.\n"
                 f"eb_toggle_{k}_ban = {{\n\tscope = country\n\tsaved_scopes = {{ eb_goods }}\n"
-                f"\teffect = {{\n\t\tswitch = {{\n\t\t\ttrigger = scope:eb_goods\n{toggle}\t\t}}\n\t}}\n}}\n\n")
+                f"\teffect = {{\n\t\tswitch = {{\n\t\t\ttrigger = scope:eb_goods\n{toggle}\t\t}}\n\t\teb_recount_bans = yes\n\t}}\n}}\n\n")
     return out
 
 
@@ -194,6 +287,9 @@ def main():
         shutil.rmtree(OUT)
     write("main_menu/common/static_modifiers/eb_bans.txt", modifiers())
     write("in_game/common/scripted_guis/eb_scripted_guis.txt", scripted_guis())
+    write("in_game/common/scripted_effects/eb_effects.txt", effects())
+    write("in_game/common/on_action/eb_on_actions.txt", ON_ACTIONS)
+    write("in_game/common/game_concepts/eb_concepts.txt", concepts())
     write("in_game/gui/trade_policies_lateralview.gui", tariffs_override(), bom=False)
     write("in_game/common/advances/eb_advances.txt", advances())
     write("main_menu/common/modifier_type_definitions/eb_modifier_types.txt", modifier_types())
@@ -212,6 +308,7 @@ def main():
             u_name, u_desc = UNLOCK_TEXT.get(lang, UNLOCK_TEXT["english"])[k]
             lines[f"MODIFIER_TYPE_NAME_eb_unlocks_{k}_bans"] = u_name
             lines[f"MODIFIER_TYPE_DESC_eb_unlocks_{k}_bans"] = u_desc
+        lines.update(pull_loc(lang))
         write(f"main_menu/localization/{lang}/eb_l_{lang}.yml", f"l_{lang}:\n" + "".join(f' {key}: "{v}"\n' for key, v in lines.items()))
     meta = {"name": "Export Bans [LOCAL]", "id": "grackbox.export_bans", "version": "1.0.0", "game_id": "eu5", "supported_game_version": "1.4.*",
             "short_description": "Ban the export or import of single goods from the Tariffs tab.", "tags": ["Economy", "1.4"],

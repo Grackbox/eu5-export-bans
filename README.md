@@ -8,6 +8,9 @@ Ban the export or the import of single goods from the Tariffs tab of Europa Univ
 - Bans are the game's own `ban_exports_of_<good>` / `ban_imports_of_<good>` modifiers, held by country modifiers.
   Trade between the country's own markets stays allowed, as in the game's own trade rules.
 - Historically mercantilist bans pull the society towards Mercantilism by `societal_value_tiny_monthly_move` per ban.
+  The pull of each kind is one modifier (`eb_<kind>_pull_<n>`), so the breakdown shows one line per kind: the goods
+  by name for one or two, otherwise their number, with the list in the tooltip of the word "goods". `eb_recount_bans`
+  sets it after every ban change and monthly for players.
 
 Steam Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=3815303367
 No dependencies.
