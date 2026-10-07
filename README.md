@@ -10,7 +10,7 @@ Ban the export or the import of single goods from the Tariffs tab of Europa Univ
 - Historically mercantilist bans pull the society towards Mercantilism by `societal_value_tiny_monthly_move` per ban.
   The pull of each kind is one modifier (`eb_<kind>_pull_<n>`), so the breakdown shows one line per kind: the goods
   by name for one or two, otherwise their number, with the list in the tooltip of the word "goods". `eb_recount_bans`
-  sets it after every ban change and monthly for players.
+  sets it after every ban change, and once per save from the monthly pulse for bans set before this.
 
 Steam Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=3815303367
 No dependencies.
