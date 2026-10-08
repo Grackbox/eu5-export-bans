@@ -77,7 +77,7 @@ def main():
                                "resource_type": "mod", "version": "1.*"}],
             "game_custom_data": {}}
     write(".metadata/metadata.json", json.dumps(meta, indent=4, ensure_ascii=False) + "\n")
-    shutil.copyfile(os.path.join(HERE, "cover.png"), os.path.join(OUT, ".metadata", "thumbnail.png"))   # Export Bans' picture
+    shutil.copyfile(os.path.join(HERE, "patch_cover.png"), os.path.join(OUT, ".metadata", "thumbnail.png"))
     print("goods:", len(GOODS), "->", OUT)
 
 

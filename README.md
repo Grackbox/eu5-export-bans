@@ -46,7 +46,7 @@ python eb_build.py     # builds the mod into Documents/Paradox Interactive/Europ
 | `eb_build.py` | the generator: modifiers, scripted GUIs, advances, the Tariffs tab override, localization |
 | `goods.json` | goods that have both ban modifiers in the game (74; camels have none) |
 | `description.txt`, `cover.jpg`, `shots/` | Workshop page |
-| `patch_description.txt` | Workshop page of the Goods Patch |
+| `patch_description.txt`, `patch_cover.png` | Workshop page of the Goods Patch |
 | `item.vdf` | steamcmd upload file (`publishedfileid` 3815303367 for updates) |
 | `tools/` | Steamworks API scripts for tags and screenshots; `build_test_goods.py`, the test goods mod; `build_goods_patch.py`, the Goods Patch |
 
