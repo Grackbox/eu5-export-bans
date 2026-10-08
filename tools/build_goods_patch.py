@@ -69,7 +69,7 @@ def main():
         t = TEXT.get(lang, TEXT["english"])
         lines = {f"STATIC_MODIFIER_NAME_ebp_{k}_ban_{g}": t[k][0].format(g=g) for g in GOODS for k in KINDS}
         write(f"main_menu/localization/{lang}/ebp_l_{lang}.yml", f"l_{lang}:\n" + "".join(f' {key}: "{v}"\n' for key, v in lines.items()))
-    meta = {"name": "Export Bans: Goods Patch [LOCAL]", "id": "grackbox.export_bans_goods_patch", "version": "1.0.0", "game_id": "eu5",
+    meta = {"name": "Export Bans: Goods Patch [LOCAL]", "id": "grackbox.export_bans_goods_patch", "version": "1.0.1", "game_id": "eu5",
             "supported_game_version": "1.4.*",
             "short_description": "Export and import ban buttons for the goods of other mods: " + ", ".join(n for _, n, _ in MODS) + ".",
             "tags": ["Economy", "1.4"],
