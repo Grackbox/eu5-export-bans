@@ -8,8 +8,8 @@ import os
 import shutil
 import sys
 
-HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, HERE)
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(HERE))   # eb_build, for the texts
 from eb_build import KINDS, LANGS, TEXT   # noqa: E402
 
 OUT = os.path.expanduser("~/Documents/Paradox Interactive/Europa Universalis V/mod/export_bans_goods_patch")
@@ -77,7 +77,7 @@ def main():
                                "resource_type": "mod", "version": "1.*"}],
             "game_custom_data": {}}
     write(".metadata/metadata.json", json.dumps(meta, indent=4, ensure_ascii=False) + "\n")
-    shutil.copyfile(os.path.join(HERE, "patch_cover.png"), os.path.join(OUT, ".metadata", "thumbnail.png"))
+    shutil.copyfile(os.path.join(HERE, "cover.png"), os.path.join(OUT, ".metadata", "thumbnail.png"))
     print("goods:", len(GOODS), "->", OUT)
 
 
