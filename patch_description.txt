@@ -1,0 +1,18 @@
+[h1]Export Bans: Goods Patch[/h1]
+Adds [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3815303367]Export Bans[/url] ban buttons to the goods of other mods.
+
+[h2]Supported mods[/h2]
+[list]
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3785316314]Just Goods[/url]: all 32 goods, from zinc and brassware to cheese, soap and spices. It also works with the separate Just Brass, Just Cheese, Just Clocks, Just Meat, Just Soap and Just Spices mods.
+[/list]
+You don't need all of these mods: goods from mods you don't have are skipped.
+
+[h2]How to use[/h2]
+[list]
+[*]Needs Export Bans. Put this patch after the goods mods in your playset.
+[*]Research Export Bans or Import Bans, then open Economy → Tariffs. The goods of the supported mods get ban buttons like the game's own goods.
+[*]Bans on these goods don't pull your society towards Mercantilism.
+[/list]
+
+[h2]Want another mod?[/h2]
+Tell me in the comments which mod adds the goods you want to ban, and I'll add it here. The mod has to define ban_exports_of_<good> and ban_imports_of_<good> for its goods; most goods mods do, because the game needs them.
