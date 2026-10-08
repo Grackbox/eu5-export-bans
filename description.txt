@@ -20,6 +20,7 @@ Food bans and other bans don't move the slider.
 [h2]Good to know[/h2]
 [list]
 [*]Works for the game's 74 goods (the game has no ban for camels), and for goods of other mods that hook into it (below). Goods that can't be banned get no button.
+[*]Goods of other mods: the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3815721336]Goods Patch[/url] adds the buttons for Just Goods. Tell me in the comments which other mods you'd like in it.
 [*]Overrides trade_policies_lateralview.gui (the Tariffs tab), so mods that change the same file may conflict.
 [*]In a game started before the mod, the two advances are added to the Age of Reformation tree when you load the save.
 [/list]
