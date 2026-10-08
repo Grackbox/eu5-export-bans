@@ -19,7 +19,35 @@ Food bans and other bans don't move the slider.
 
 [h2]Good to know[/h2]
 [list]
-[*]Works for 74 goods (the game has no ban for camels).
+[*]Works for the game's 74 goods (the game has no ban for camels), and for goods of other mods that hook into it (below). Goods that can't be banned get no button.
 [*]Overrides trade_policies_lateralview.gui (the Tariffs tab), so mods that change the same file may conflict.
 [*]In a game started before the mod, the two advances are added to the Age of Reformation tree when you load the save.
 [/list]
+
+[h2]For modders: goods of your own[/h2]
+A mod that adds goods can give them ban buttons, with no dependency on Export Bans: append to two on_actions from a file of your own, and keep a country modifier with ban_exports_of_<good> / ban_imports_of_<good> in step with the country's ban lists.
+[code]
+eb_register_goods = { on_actions = { my_eb_register } }
+eb_custom_bans_changed = { on_actions = { my_eb_apply } }
+
+my_eb_register = {
+	effect = { add_to_global_variable_list = { name = eb_supported_goods target = goods:my_good } }
+}
+my_eb_apply = {	# root = the country
+	effect = {
+		if = {
+			limit = { is_target_in_variable_list = { name = eb_export_bans target = goods:my_good } }
+			if = {
+				limit = { NOT = { has_country_modifier = my_export_ban_my_good } }
+				add_country_modifier = { modifier = my_export_ban_my_good years = -1 }
+			}
+		}
+		else_if = {
+			limit = { has_country_modifier = my_export_ban_my_good }
+			remove_country_modifier = my_export_ban_my_good
+		}
+		# the same for imports, with eb_import_bans
+	}
+}
+[/code]
+my_export_ban_my_good is a static modifier with ban_exports_of_my_good = yes. Without Export Bans the two on_actions are never run.

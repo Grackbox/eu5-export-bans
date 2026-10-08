@@ -119,6 +119,48 @@ def pull_loc(lang):
     return lines
 
 
+def scripted_triggers():
+    listed = "".join(f"\t\tscope:eb_goods = goods:{g}\n" for g in GOODS)
+    return (f"# Is scope:eb_goods one of the goods this mod bans with its own modifiers (goods.json)?\n"
+            f"eb_is_listed_goods = {{\n\tOR = {{\n{listed}\t}}\n}}\n\n"
+            "# Can this mod ban scope:eb_goods: a listed good, or one another mod registered (see eb_on_actions.txt)?\n"
+            "eb_is_supported_goods = {\n\tOR = {\n\t\teb_is_listed_goods = yes\n"
+            "\t\tis_target_in_global_variable_list = { name = eb_supported_goods target = scope:eb_goods }\n\t}\n}\n")
+
+
+# The hooks for mods that add goods of their own. The bans of those goods are kept in the country variable lists
+# eb_export_bans / eb_import_bans; the mod that adds the good gives the game's ban modifier for them.
+ON_ACTIONS = """# Export Bans: hooks for mods that add goods of their own. Append to them from your own file, so several mods can:
+#
+#   eb_register_goods = { on_actions = { my_eb_register } }
+#   eb_custom_bans_changed = { on_actions = { my_eb_apply } }
+#
+# eb_register_goods (no scope) runs at game start and on every load: add your goods to the global variable list
+#   eb_supported_goods, and the Tariffs tab shows ban buttons for them.
+#   my_eb_register = { effect = { add_to_global_variable_list = { name = eb_supported_goods target = goods:my_good } } }
+# eb_custom_bans_changed (root = the country) runs when the country bans or lifts a ban on a good that isn't the
+#   game's own. The banned goods are in the country's variable lists eb_export_bans and eb_import_bans: give or take
+#   away a country modifier with ban_exports_of_my_good / ban_imports_of_my_good to match them.
+# Without Export Bans these hooks are never run, so the appending mod needs no dependency on it.
+
+on_game_start = { on_actions = { eb_refresh_goods } }
+on_game_load = { on_actions = { eb_refresh_goods } }
+
+eb_refresh_goods = {
+	effect = {
+		clear_global_variable_list = eb_supported_goods
+		trigger_event_silently = { on_action = eb_register_goods }
+	}
+}
+
+eb_register_goods = {
+}
+
+eb_custom_bans_changed = {
+}
+"""
+
+
 def scripted_guis():
     out = ""
     for k in KINDS:
@@ -128,14 +170,24 @@ def scripted_guis():
                          f"\t\t\t\t\tremove_country_modifier = eb_{k}_ban_{g}\n\t\t\t\t}}\n\t\t\t\telse = {{\n"
                          f"\t\t\t\t\tadd_country_modifier = {{ modifier = eb_{k}_ban_{g} years = -1 }}\n\t\t\t\t}}\n\t\t\t}}\n"
                          for g in GOODS)
-        out += (f"# Scope: country. Has the advance that unlocks {k} bans.\n"
-                f"eb_can_ban_{k} = {{\n\tscope = country\n\tis_shown = {{\n\t\thas_advance = eb_{k}_ban_advance\n\t}}\n}}\n\n"
+        in_list = f"is_target_in_variable_list = {{ name = eb_{k}_bans target = scope:eb_goods }}"
+        # another mod's good: the ban is kept in a list, and that mod gives the ban modifier (see ON_ACTIONS)
+        custom = (f"\t\tif = {{\n\t\t\tlimit = {{ eb_is_listed_goods = no }}\n"
+                  f"\t\t\tif = {{\n\t\t\t\tlimit = {{ {in_list} }}\n"
+                  f"\t\t\t\tremove_list_variable = {{ name = eb_{k}_bans target = scope:eb_goods }}\n\t\t\t}}\n"
+                  f"\t\t\telse = {{\n\t\t\t\tadd_to_variable_list = {{ name = eb_{k}_bans target = scope:eb_goods }}\n\t\t\t}}\n"
+                  f"\t\t\ttrigger_event_silently = {{ on_action = eb_custom_bans_changed }}\n\t\t}}\n")
+        out += (f"# Scope: country. Shows this good's {k} ban button: once the advance is researched, for a good this mod can\n"
+                f"# ban, or while a ban is on so it can be lifted.\n"
+                f"eb_show_{k}_ban = {{\n\tscope = country\n\tsaved_scopes = {{ eb_goods }}\n\tis_shown = {{\n\t\tOR = {{\n"
+                f"\t\t\tAND = {{\n\t\t\t\thas_advance = eb_{k}_ban_advance\n\t\t\t\teb_is_supported_goods = yes\n\t\t\t}}\n"
+                f"{banned}\t\t\t{in_list}\n\t\t}}\n\t}}\n}}\n\n"
                 f"# Scope: country. Is this good's {k} banned by this mod?\n"
                 f"eb_is_{k}_banned = {{\n\tscope = country\n\tsaved_scopes = {{ eb_goods }}\n"
-                f"\tis_shown = {{\n\t\tOR = {{\n{banned}\t\t}}\n\t}}\n}}\n\n"
+                f"\tis_shown = {{\n\t\tOR = {{\n{banned}\t\t\t{in_list}\n\t\t}}\n\t}}\n}}\n\n"
                 f"# Scope: country. Bans this good's {k}, or lifts the ban.\n"
                 f"eb_toggle_{k}_ban = {{\n\tscope = country\n\tsaved_scopes = {{ eb_goods }}\n"
-                f"\teffect = {{\n\t\tswitch = {{\n\t\t\ttrigger = scope:eb_goods\n{toggle}\t\t}}\n\t\teb_recount_bans = yes\n\t}}\n}}\n\n")
+                f"\teffect = {{\n\t\tswitch = {{\n\t\t\ttrigger = scope:eb_goods\n{toggle}\t\t}}\n{custom}\t\teb_recount_bans = yes\n\t}}\n}}\n\n")
     return out
 
 
@@ -150,7 +202,7 @@ def button(k):
 					size = {{ 20 20 }}
 					parentanchor = vcenter
 				button_square_checkbox = {{
-					visible = "[Or(GetScriptedGui('eb_can_ban_{k}').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End), GetScriptedGui('eb_is_{k}_banned').IsShown({SCOPE}))]"
+					visible = "[GetScriptedGui('eb_show_{k}_ban').IsShown({SCOPE})]"
 					size = {{ 20 20 }}
 					tooltip = "EB_{k.upper()}_TT"
 					blockoverride "check_texture" {{
@@ -269,6 +321,8 @@ def main():
         shutil.rmtree(OUT)
     write("main_menu/common/static_modifiers/eb_bans.txt", modifiers())
     write("in_game/common/scripted_guis/eb_scripted_guis.txt", scripted_guis())
+    write("in_game/common/scripted_triggers/eb_triggers.txt", scripted_triggers())
+    write("in_game/common/on_action/eb_on_actions.txt", ON_ACTIONS)
     write("in_game/common/scripted_effects/eb_effects.txt", effects())
     write("in_game/common/game_concepts/eb_concepts.txt", concepts())
     write("in_game/gui/trade_policies_lateralview.gui", tariffs_override(), bom=False)
